@@ -317,6 +317,9 @@ class Translator(object):
         #with open(f"output/out_eval/all_predictions.txt", 'a+', encoding="utf-8") as fw:
         #    fw.write(str(all_predictions))
 
+        #write into database
+
+
         return all_scores, all_predictions
 
     def translate_batch(self, batch, data, fast=False):

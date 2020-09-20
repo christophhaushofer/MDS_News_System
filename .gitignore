@@ -6,4 +6,14 @@ pretrained_models/
 output/
 data/
 analysis/
+old_main.py
+pipelines_backup.py
+settings_new.py
+onmt/
+venv/
+time_main.py
+log.txt
+pretrained_models/
+
+
 

@@ -25,8 +25,7 @@ def date_convert(value):
         print(('Failed to parse date from: ' + value))
     return nx
 
-class NewsArticle(scrapy.Item):
-    # ToDo: write loader.py and define functions to reduce redundancy
+class NewsItem(scrapy.Item):
     file_id = scrapy.Field(
         input_processor=MapCompose(remove_tags),
         output_processor=Join(),
@@ -54,7 +53,6 @@ class NewsArticle(scrapy.Item):
         input_processor=MapCompose(
                             remove_tags,
                             lambda x: re.sub('Continue reading...', '', x),
-                            #lambda x: re.sub('^(.*(.*)) — ', '', x),
                             lambda x: x.strip(),
                                    ),
         output_processor=Join(),
@@ -63,8 +61,6 @@ class NewsArticle(scrapy.Item):
         input_processor=Compose(Join(' '),
                              lambda x: replace_escape_chars(x, replace_by=' '),
                              lambda x: re.sub('<[^>]*>', '', x),
-                             #lambda x: re.sub('^[A-Z0-9] — ', '', x),
-                             #lambda x: re.sub('^(.*(.*)) — ', '', x),
                              lambda x: re.sub(' +', ' ', x),
                              replace_entities,
                             ),

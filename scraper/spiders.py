@@ -1,7 +1,16 @@
 import scrapy
 from scrapy.loader import ItemLoader
+from scrapy.utils.log import configure_logging
 import hashlib
-from scraper.items import NewsArticle
+from scraper.items import NewsItem
+import logging
+
+configure_logging(install_root_handler=False)
+logging.basicConfig(
+    filename='log.txt',
+    format='%(levelname)s: %(message)s',
+    level=logging.INFO
+)
 
 
 class ApressSpider(scrapy.Spider):
@@ -11,7 +20,6 @@ class ApressSpider(scrapy.Spider):
         "http://www.apnews.com/apf-topnews",
         "https://apnews.com/apf-intlnews",
         "https://apnews.com/apf-politics",
-
     ]
 
     def parse(self, response):
@@ -31,7 +39,7 @@ class ApressSpider(scrapy.Spider):
             title = response.xpath('//meta[contains(@property, "og:title")]//@content').extract_first()
             file_id = hashlib.md5(title.encode('utf-8')).hexdigest()
 
-            l = ItemLoader(item=NewsArticle(), response=response)
+            l = ItemLoader(item=NewsItem(), response=response)
             l.add_xpath('headline', '//meta[contains(@property, "og:title")]//@content')
             l.add_value('file_id', file_id)
             l.add_xpath('title', '//meta[contains(@property, "og:title")]//@content')
@@ -78,7 +86,7 @@ class PoliticoSpider(scrapy.Spider):
         if x in 'article':
             file_id = hashlib.md5(title.encode('utf-8')).hexdigest()
 
-            l = ItemLoader(item=NewsArticle(), response=response)
+            l = ItemLoader(item=NewsItem(), response=response)
             l.add_xpath('headline', '//*//h2[contains(@class, "headline")]//text()')
             l.add_value('file_id', file_id)
             l.add_value('title', title)
@@ -93,6 +101,7 @@ class PoliticoSpider(scrapy.Spider):
         else:
             next
 
+'''
 class AljazeeraSpider(scrapy.Spider):
     name = 'aljazeera'
 
@@ -123,7 +132,7 @@ class AljazeeraSpider(scrapy.Spider):
 
             file_id = hashlib.md5(title.encode('utf-8')).hexdigest()
 
-            l = ItemLoader(item=NewsArticle(), response=response)
+            l = ItemLoader(item=NewsItem(), response=response)
             l.add_xpath('headline', '//*//h1[contains(@class, "post-title") or contains(@class, "heading-story")]//text()')
             l.add_value('file_id', file_id)
             l.add_value('title', title)
@@ -140,7 +149,7 @@ class AljazeeraSpider(scrapy.Spider):
             yield l.load_item()
         else:
             next
-
+'''
 class BbcSpider(scrapy.Spider):
     name = 'bbc'
 
@@ -170,7 +179,7 @@ class BbcSpider(scrapy.Spider):
         if x in 'article':
             file_id = hashlib.md5(title.encode('utf-8')).hexdigest()
 
-            l = ItemLoader(item=NewsArticle(), response=response)
+            l = ItemLoader(item=NewsItem(), response=response)
             l.add_xpath('headline', '//meta[contains(@property, "og:title")]//@content')
             l.add_value('file_id', file_id)
             l.add_value('title', title)
@@ -217,7 +226,7 @@ class CbnSpider(scrapy.Spider):
         if x in 'article':
             file_id = hashlib.md5(title.encode('utf-8')).hexdigest()
 
-            l = ItemLoader(item=NewsArticle(), response=response)
+            l = ItemLoader(item=NewsItem(), response=response)
             l.add_xpath('headline', '//h1[contains(@class, "page-title")]//text()')
             l.add_value('file_id', file_id)
             l.add_value('title', title)
@@ -232,6 +241,48 @@ class CbnSpider(scrapy.Spider):
         else:
             next
 
+class CnnSpider(scrapy.Spider):
+    name = 'cnn'
+
+    start_urls = [
+        "https://edition.cnn.com/"
+    ]
+
+    def parse(self, response):
+
+        # to deal with xml tags eg <dc:creator>
+        response.selector.remove_namespaces()
+
+        for item in response.xpath('//article//a/@href').extract():
+            request = scrapy.Request(response.urljoin(item), callback=self.parse_page)
+            yield request
+
+    def parse_page(self, response):
+
+        x = response.xpath('//meta[contains(@property, "og:type")]//@content').extract_first()
+
+        if x in 'article':
+            file_id = hashlib.md5(title.encode('utf-8')).hexdigest()
+
+            l = ItemLoader(item=NewsItem(), response=response)
+            l.add_xpath('headline', '//meta[contains(@property, "og:title")]//@content')
+            l.add_value('file_id', file_id)
+            l.add_value('title', '//meta[contains(@name, "title")]//@content')
+            l.add_value('link', response.url)
+            l.add_value('description', '//meta[contains(@name, "description")]//@content')
+            l.add_xpath('author', '//meta[contains(@name, "author")]//@content')
+            l.add_xpath('content', '//div[contains(@class, "zn-body__paragraph") or '
+                                    'contains(@class, "BasicArticle") or'
+                                    'contains(@class, "Paragraph__component")]//text()')
+            l.add_xpath('content', '//div[contains(@class, "zn-body__paragraph")]//h3//text()')
+            l.add_value('pubDate', '//meta[contains(@name, "pubdate")]//@content')
+            l.add_value('source', 'cnn')
+
+            yield l.load_item()
+        else:
+            next
+
+'''            
 class CnnSpider(scrapy.Spider):
     name = 'cnn'
 
@@ -261,7 +312,7 @@ class CnnSpider(scrapy.Spider):
         if x in 'article':
             file_id = hashlib.md5(title.encode('utf-8')).hexdigest()
 
-            l = ItemLoader(item=NewsArticle(), response=response)
+            l = ItemLoader(item=NewsItem(), response=response)
             l.add_xpath('headline', '//meta[contains(@property, "og:title")]//@content')
             l.add_value('file_id', file_id)
             l.add_value('title', title)
@@ -278,7 +329,7 @@ class CnnSpider(scrapy.Spider):
             yield l.load_item()
         else:
             next
-
+'''
 class France24Spider(scrapy.Spider):
     name = 'france24'
 
@@ -308,7 +359,7 @@ class France24Spider(scrapy.Spider):
         if x in 'article':
             file_id = hashlib.md5(title.encode('utf-8')).hexdigest()
 
-            l = ItemLoader(item=NewsArticle(), response=response)
+            l = ItemLoader(item=NewsItem(), response=response)
             l.add_xpath('headline', '//meta[contains(@property, "og:title")]//@content')
             l.add_value('file_id', file_id)
             l.add_value('title', title)
@@ -353,7 +404,7 @@ class LatimesSpider(scrapy.Spider):
 
             file_id = hashlib.md5(title.encode('utf-8')).hexdigest()
 
-            l = ItemLoader(item=NewsArticle(), response=response)
+            l = ItemLoader(item=NewsItem(), response=response)
             l.add_xpath('headline', '//*//h1[contains(@class, "headline")]//text()')
             l.add_value('file_id', file_id)
             l.add_value('title', title)
@@ -397,7 +448,7 @@ class NytimesSpider(scrapy.Spider):
         if x in 'article':
             file_id = hashlib.md5(title.encode('utf-8')).hexdigest()
 
-            l = ItemLoader(item=NewsArticle(), response=response)
+            l = ItemLoader(item=NewsItem(), response=response)
             l.add_xpath('headline', '//*//h1//text()')
             l.add_value('file_id', file_id)
             l.add_value('title', title)
@@ -430,12 +481,11 @@ class ObserverSpider(scrapy.Spider):
         # to deal with xml tags eg <dc:creator>
         response.selector.remove_namespaces()
 
-        for item in response.xpath('//a[contains(@class, "module-entry-full-anchor")]/@href').extract():
+        for item in response.xpath('//a[contains(@class, "module-entry-full-anchor") or'
+                                        'contains(@class, "post type-post status-publish format-standard")]/@href').extract():
 
             request = scrapy.Request(response.urljoin(item), callback=self.parse_page)
             request.cb_kwargs['title'] = response.xpath('//h2[contains(@class, "module-entry-title")]//text()').extract_first()
-            #request.cb_kwargs['description'] = response.xpath('//a[contains(@class, "Component-asBlock")]//text()').extract_first()
-            #request.cb_kwargs['pubDate'] = response.xpath('//span[contains(@class, "Timestamp")]/@data-source').extract_first()
             request.cb_kwargs['author'] = response.xpath('//div[contains(@class, "module-entry-author")]//text()').extract_first()
             yield request
 
@@ -447,7 +497,7 @@ class ObserverSpider(scrapy.Spider):
             title = response.xpath('//h1[contains(@class, "entry-title")]//text()').extract_first()
             file_id = hashlib.md5(title.encode('utf-8')).hexdigest()
 
-            l = ItemLoader(item=NewsArticle(), response=response)
+            l = ItemLoader(item=NewsItem(), response=response)
             l.add_xpath('headline', '//h1[contains(@class, "entry-title")]//text()')
             l.add_value('file_id', file_id)
             l.add_value('title', title)
@@ -489,7 +539,7 @@ class ReutersSpider(scrapy.Spider):
         if x in 'article':
             file_id = hashlib.md5(title.encode('utf-8')).hexdigest()
 
-            l = ItemLoader(item=NewsArticle(), response=response)
+            l = ItemLoader(item=NewsItem(), response=response)
             l.add_xpath('headline', '//h1[contains(@class, "headline")]//text()')
             l.add_value('file_id', file_id)
             l.add_value('title', title)
@@ -510,7 +560,7 @@ class ReutersSpider(scrapy.Spider):
 
 class TelegraphSpider(scrapy.Spider):
     name = 'telegraph'
-
+    '''
     start_urls = [
         "http://www.telegraph.co.uk/rss.xml",
         "http://www.telegraph.co.uk/news/rss.xml",
@@ -518,6 +568,10 @@ class TelegraphSpider(scrapy.Spider):
         "http://www.telegraph.co.uk/technology/rss.xml",
         "http://www.telegraph.co.uk/business/rss.xml",
         "http://www.telegraph.co.uk/opinion/rss.xml"
+    ]
+    '''
+    start_urls = [
+        "http://www.telegraph.co.uk/news/rss.xml",
     ]
 
     def parse(self, response):
@@ -541,7 +595,7 @@ class TelegraphSpider(scrapy.Spider):
         if x in 'article':
             file_id = hashlib.md5(title.encode('utf-8')).hexdigest()
 
-            l = ItemLoader(item=NewsArticle(), response=response)
+            l = ItemLoader(item=NewsItem(), response=response)
             l.add_xpath('headline', '//meta[contains(@property, "og:title")]//@content')
             l.add_value('file_id', file_id)
             l.add_value('title', title)
@@ -584,7 +638,7 @@ class TheguardianSpider(scrapy.Spider):
         if x in 'article':
             file_id = hashlib.md5(title.encode('utf-8')).hexdigest()
 
-            l = ItemLoader(item=NewsArticle(), response=response)
+            l = ItemLoader(item=NewsItem(), response=response)
             l.add_xpath('headline', '//meta[contains(@property, "og:title")]//@content')
             l.add_value('file_id', file_id)
             l.add_value('title', title)
@@ -627,7 +681,7 @@ class ThetimesSpider(scrapy.Spider):
         if x in 'website':
             file_id = hashlib.md5(title.encode('utf-8')).hexdigest()
 
-            l = ItemLoader(item=NewsArticle(), response=response)
+            l = ItemLoader(item=NewsItem(), response=response)
             l.add_xpath('headline', '//meta[contains(@property, "og:title")]//@content')
             l.add_value('file_id', file_id)
             l.add_value('title', title)
@@ -667,7 +721,7 @@ class ThetimesUKSpider(scrapy.Spider):
             link = response.url
             file_id = hashlib.md5(link.encode('utf-8')).hexdigest()
 
-            l = ItemLoader(item=NewsArticle(), response=response)
+            l = ItemLoader(item=NewsItem(), response=response)
             l.add_xpath('headline', '//meta[contains(@property, "og:title")]//@content')
             l.add_value('file_id', file_id)
             l.add_xpath('title', '//h1[contains(@role, "heading")]//text()')
@@ -712,7 +766,7 @@ class TimesofindiaSpider(scrapy.Spider):
         if x in 'article':
             file_id = hashlib.md5(title.encode('utf-8')).hexdigest()
 
-            l = ItemLoader(item=NewsArticle(), response=response)
+            l = ItemLoader(item=NewsItem(), response=response)
             l.add_xpath('headline', '//meta[contains(@property, "og:title")]//@content')
             l.add_value('file_id', file_id)
             l.add_value('title', title)
@@ -756,7 +810,7 @@ class ViceSpider(scrapy.Spider):
             title = response.xpath('//meta[contains(@property, "og:title")]//@content').extract_first()
             file_id = hashlib.md5(title.encode('utf-8')).hexdigest()
 
-            l = ItemLoader(item=NewsArticle(), response=response)
+            l = ItemLoader(item=NewsItem(), response=response)
             l.add_xpath('headline', '//meta[contains(@property, "og:title")]//@content')
             l.add_value('file_id', file_id)
             l.add_value('title', title)
@@ -796,7 +850,7 @@ class WiredSpider(scrapy.Spider):
             title = response.xpath('//meta[contains(@property, "og:title")]//@content').extract_first()
             file_id = hashlib.md5(title.encode('utf-8')).hexdigest()
 
-            l = ItemLoader(item=NewsArticle(), response=response)
+            l = ItemLoader(item=NewsItem(), response=response)
             l.add_xpath('headline', '//meta[contains(@property, "og:title")]//@content')
             l.add_value('file_id', file_id)
             l.add_value('title', title)

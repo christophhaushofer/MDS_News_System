@@ -144,11 +144,9 @@ class Translation(object):
         output += 'PRED {}: {}\n'.format(sent_number, pred_sent)
         output += "PRED SCORE: {:.4f}\n".format(best_score)
 
-        # modified for logging by CH
-        with open(f"output/out_eval/pred.txt", 'a+', encoding="utf-8") as fw:
-            fw.write(f"PRED {sent_number}: {pred_sent}\n")
-        with open(f"output/out_eval/score.txt", 'a+', encoding="utf-8") as fw:
-            fw.write(f"SCORE {sent_number}: {best_score}\n")
+        # modified for logging the pred scores
+        with open(f"output/output_scored.txt", 'a+', encoding="utf-8") as fw:
+            fw.write("{:.4f} \t {}\n".format(best_score, pred_sent))
 
         if self.gold_sent is not None:
             tgt_sent = ' '.join(self.gold_sent)

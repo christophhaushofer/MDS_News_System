@@ -12,3 +12,4 @@ DATABASE = {
     'password': os.environ.get("password"),
     'database': os.environ.get("database")
 }
+
