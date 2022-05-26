@@ -68,7 +68,7 @@ testfixtures==6.14.1
 tinysegmenter==0.3
 tldextract==2.2.2
 tqdm==4.45.0
-Twisted==20.3.0
+Twisted==22.4.0
 tzlocal==2.0.0
 uritools==3.0.0
 urlextract==0.14.0
